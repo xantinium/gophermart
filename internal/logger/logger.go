@@ -21,7 +21,7 @@ func Init(isDev bool) {
 		lg, err = zap.NewProduction()
 	}
 	if err != nil {
-		panic(fmt.Errorf("failed to init logger: %v", err))
+		panic(fmt.Errorf("failed to init logger: %w", err))
 	}
 
 	logger = lg.Sugar()
