@@ -67,10 +67,13 @@ func convertError(err error) error {
 		return models.ErrNotFound
 	}
 
-	return err
-}
-
-func shouldRetry(err error) bool {
 	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case pgerrcode.UniqueViolation:
+			return models.ErrAlreadyExists
+		}
+	}
+
+	return err
 }

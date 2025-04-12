@@ -1,4 +1,4 @@
-package login_handler
+package register_handler
 
 import (
 	"net/http"

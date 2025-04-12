@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/huandu/go-sqlbuilder"
 )
@@ -23,7 +24,7 @@ func (client *PostgresClient) initTables(ctx context.Context) error {
 }
 
 func (client *PostgresClient) initUsersTable(ctx context.Context) error {
-	b := sqlbuilder.PostgreSQL.NewCreateTableBuilder()
+	b := sqlbuilder.NewCreateTableBuilder()
 
 	b.IfNotExists()
 	b.CreateTable(UsersTable)
@@ -41,21 +42,16 @@ func (client *PostgresClient) initUsersTable(ctx context.Context) error {
 }
 
 func (client *PostgresClient) initOrdersTable(ctx context.Context) error {
-	b := sqlbuilder.PostgreSQL.NewCreateTableBuilder()
+	b := sqlbuilder.NewCreateTableBuilder()
 
 	b.IfNotExists()
 	b.CreateTable(OrdersTable)
 	b.Define("id", "SERIAL", "PRIMARY KEY")
-	b.Define("number", "STRING", "NOT NULL", "UNIQUE")
-	b.Define("user_id", "VARCHAR(50)", "NOT NULL", "UNIQUE")
+	b.Define("number", "TEXT", "NOT NULL", "UNIQUE")
+	b.Define("user_id", "INT", fmt.Sprintf("REFERENCES %s(id)", UsersTable))
 	b.Define("status", "SMALLINT", "NOT NULL")
 	b.Define("created", "TIMESTAMP", "NOT NULL")
 	b.Define("updated", "TIMESTAMP", "NOT NULL")
-
-	b.Define("CONSTRAINT", "fk_user")
-	b.Define("FOREIGN KEY", "user_id")
-	b.Define("REFERENCES", UsersTable+".id")
-	b.Define("ON DELETE", "CASCADE")
 
 	query, args := b.Build()
 

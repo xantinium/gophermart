@@ -11,6 +11,7 @@ import (
 )
 
 type appArgs struct {
+	IsDev           bool
 	Addr            string
 	DatabaseConnStr string
 	AccrualHost     string
@@ -32,6 +33,9 @@ func parseAppArgs() appArgs {
 
 	envArgs := parseAppArgsFromEnv()
 
+	if envArgs.IsDev.Exists {
+		args.IsDev = envArgs.IsDev.Value
+	}
 	if envArgs.Addr.Exists {
 		args.Addr = envArgs.Addr.Value
 	}
@@ -46,6 +50,7 @@ func parseAppArgs() appArgs {
 }
 
 type appEnvArgs struct {
+	IsDev           tools.BoolEnvVar
 	Addr            tools.StrEnvVar
 	DatabaseConnStr tools.StrEnvVar
 	AccrualHost     tools.StrEnvVar
@@ -53,6 +58,7 @@ type appEnvArgs struct {
 
 func parseAppArgsFromEnv() appEnvArgs {
 	return appEnvArgs{
+		IsDev:           tools.GetBoolFromEnv("IS_DEV"),
 		Addr:            tools.GetStrFromEnv("RUN_ADDRESS"),
 		DatabaseConnStr: tools.GetStrFromEnv("DATABASE_URI"),
 		AccrualHost:     tools.GetStrFromEnv("ACCRUAL_SYSTEM_ADDRESS"),

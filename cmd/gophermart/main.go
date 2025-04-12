@@ -9,24 +9,26 @@ import (
 	"github.com/xantinium/gophermart/internal/logger"
 )
 
-const isDev = true
-
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	args := parseAppArgs()
 
-	logger.Init(isDev)
+	logger.Init(args.IsDev)
 	defer logger.Destroy()
 
 	app := app.New(app.Options{
-		IsDev:           isDev,
+		IsDev:           args.IsDev,
 		Addr:            args.Addr,
 		DatabaseConnStr: args.DatabaseConnStr,
 		AccrualHost:     args.AccrualHost,
 	})
 
-	app.Run(context.Background())
+	app.Run(ctx)
 
 	waitForStopSignal()
+	cancel()
 
 	app.Wait()
 }

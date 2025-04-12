@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -9,13 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/xantinium/gophermart/internal/logger"
-	handlers "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
+	login_handler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
+	register_handler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/register"
 	"github.com/xantinium/gophermart/internal/presentation/rest/middlewares"
+	"github.com/xantinium/gophermart/internal/usecases"
 )
 
 type ServerOptions struct {
-	IsDev bool
-	Addr  string
+	IsDev    bool
+	Addr     string
+	UseCases *usecases.UseCases
 }
 
 func NewServer(opts ServerOptions) *Server {
@@ -24,29 +28,43 @@ func NewServer(opts ServerOptions) *Server {
 	}
 
 	engine := gin.New()
-	engine.Use(middlewares.RecoveryMiddleware(), middlewares.LoggerMiddleware())
+	engine.Use(middlewares.RecoveryMiddleware())
 
-	api := engine.Group("/api")
-
-	privateRoutes := api.Group("")
-	privateRoutes.Use()
-
-	userGroup := privateRoutes.Group("/user")
-	{
-		register(userGroup, http.MethodPost, "/login", handlers.LoginHandler)
-	}
-
-	return &Server{
+	server := &Server{
 		server: &http.Server{
 			Addr:    opts.Addr,
 			Handler: engine,
 		},
+		useCases:      opts.UseCases,
+		tokensCleaner: NewTokensCleaner(opts.UseCases),
+	}
+
+	api := engine.Group("/api")
+	api.Use(middlewares.LoggerMiddleware())
+
+	registerPublicHandlers(server, api.Group(""))
+	registerPrivateHandlers(server, api.Group(""))
+
+	return server
+}
+
+func registerPublicHandlers(server *Server, root *gin.RouterGroup) {
+	userGroup := root.Group("/user")
+	{
+		register(server, userGroup, "/register", register_handler.New())
+		register(server, userGroup, "/login", login_handler.New())
 	}
 }
 
+func registerPrivateHandlers(server *Server, root *gin.RouterGroup) {
+	root.Use(middlewares.AuthMiddleware(server.useCases))
+}
+
 type Server struct {
-	wg     sync.WaitGroup
-	server *http.Server
+	wg            sync.WaitGroup
+	server        *http.Server
+	useCases      *usecases.UseCases
+	tokensCleaner *TokensCleaner
 }
 
 func (s *Server) Run(ctx context.Context) {
@@ -58,11 +76,13 @@ func (s *Server) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case err := <-runServer(s.server):
-			if err != nil {
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				panic(err)
 			}
 		}
 	}()
+
+	s.tokensCleaner.Run(ctx)
 }
 
 func (s *Server) Wait() {
@@ -71,6 +91,12 @@ func (s *Server) Wait() {
 
 	err := s.server.Shutdown(ctx)
 	if err != nil {
-		logger.Errorf("failed to gracefully shutdown server: %w", err)
+		logger.Errorf("failed to gracefully shutdown server: %v", err)
 	}
+
+	s.tokensCleaner.Wait()
+}
+
+func (s *Server) GetUseCases() *usecases.UseCases {
+	return s.useCases
 }

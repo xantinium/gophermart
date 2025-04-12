@@ -1,17 +1,25 @@
 package usersrepo
 
-type UsersRepositoryOptions struct {
-	Storage UsersStorage
-}
+import (
+	"context"
 
-// NewUsersRepository создаёт новый репозиторий метрик.
-func NewUsersRepository(opts UsersRepositoryOptions) *UsersRepository {
+	"github.com/xantinium/gophermart/internal/models"
+)
+
+func NewUsersRepository(storage UsersStorage) *UsersRepository {
 	return &UsersRepository{
-		storage: opts.Storage,
+		storage: storage,
 	}
 }
 
-// UsersRepository структура, описывающая репозиторий метрик.
 type UsersRepository struct {
 	storage UsersStorage
+}
+
+func (repo *UsersRepository) CreateUser(ctx context.Context, login, passwordHash string) error {
+	return repo.storage.InsertUser(ctx, login, passwordHash)
+}
+
+func (repo *UsersRepository) GetUserByLogin(ctx context.Context, login string) (models.User, error) {
+	return repo.storage.FindUserByLogin(ctx, login)
 }

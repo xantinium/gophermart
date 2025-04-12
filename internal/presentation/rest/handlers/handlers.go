@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"github.com/xantinium/gophermart/internal/tools"
+	"github.com/xantinium/gophermart/internal/usecases"
 )
 
 var validate *validator.Validate
@@ -28,4 +29,14 @@ func BindRequestBody(ctx *gin.Context, v any) error {
 	}
 
 	return validate.StructCtx(ctx, v)
+}
+
+type RestServer interface {
+	GetUseCases() *usecases.UseCases
+}
+
+type RestHandler[T any] interface {
+	GetMethod() string
+	Parse(ctx *gin.Context) (T, error)
+	Handle(ctx *gin.Context, server RestServer, req T) (int, any, error)
 }
