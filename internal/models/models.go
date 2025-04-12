@@ -44,7 +44,7 @@ type User struct {
 	updated      time.Time
 }
 
-func (user User) Id() int {
+func (user User) ID() int {
 	return user.id
 }
 

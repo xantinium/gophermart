@@ -30,7 +30,7 @@ func (cases *UseCases) AuthorizeUser(ctx context.Context, login, password string
 	}
 
 	token := xid.New().String()
-	err = cases.tokensRepo.AuthorizeUser(ctx, user.Id(), token)
+	err = cases.tokensRepo.AuthorizeUser(ctx, user.ID(), token)
 
 	return token, err
 }

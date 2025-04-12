@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/xantinium/gophermart/internal/logger"
-	login_handler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
-	register_handler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/register"
+	"github.com/xantinium/gophermart/internal/presentation/rest/handlers/loginhandler"
+	"github.com/xantinium/gophermart/internal/presentation/rest/handlers/registerhandler"
 	"github.com/xantinium/gophermart/internal/presentation/rest/middlewares"
 	"github.com/xantinium/gophermart/internal/usecases"
 )
@@ -51,8 +51,8 @@ func NewServer(opts ServerOptions) *Server {
 func registerPublicHandlers(server *Server, root *gin.RouterGroup) {
 	userGroup := root.Group("/user")
 	{
-		register(server, userGroup, "/register", register_handler.New())
-		register(server, userGroup, "/login", login_handler.New())
+		register(server, userGroup, "/register", registerhandler.New())
+		register(server, userGroup, "/login", loginhandler.New())
 	}
 }
 

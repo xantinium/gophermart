@@ -1,4 +1,4 @@
-package login_handler
+package loginhandler
 
 import (
 	"net/http"
