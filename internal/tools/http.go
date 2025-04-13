@@ -1,6 +1,10 @@
 package tools
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+
+	"github.com/xantinium/gophermart/internal/consts"
+)
 
 const tokenCookieName = "token"
 
@@ -13,6 +17,6 @@ func SetTokenCookie(ctx *gin.Context, token string) {
 }
 
 func WriteJSON(ctx *gin.Context, statusCode int, json []byte) {
-	ctx.Header("Content-Type", "application/json; charset=utf-8")
+	ctx.Header(consts.HeaderContentType, "application/json; charset=utf-8")
 	ctx.String(statusCode, string(json))
 }

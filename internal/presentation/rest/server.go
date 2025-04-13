@@ -39,25 +39,25 @@ func NewServer(opts ServerOptions) *Server {
 		tokensCleaner: NewTokensCleaner(opts.UseCases),
 	}
 
-	api := engine.Group("/api")
-	api.Use(middlewares.LoggerMiddleware())
+	apiGroup := engine.Group("/api")
+	apiGroup.Use(middlewares.CompressMiddleware(), middlewares.LoggerMiddleware())
 
-	registerPublicHandlers(server, api.Group(""))
-	registerPrivateHandlers(server, api.Group(""))
+	registerPublicHandlers(server, apiGroup.Group(""))
+	registerPrivateHandlers(server, apiGroup.Group(""))
 
 	return server
 }
 
-func registerPublicHandlers(server *Server, root *gin.RouterGroup) {
-	userGroup := root.Group("/user")
+func registerPublicHandlers(server *Server, rootGroup *gin.RouterGroup) {
+	userGroup := rootGroup.Group("/user")
 	{
 		register(server, userGroup, "/register", registerhandler.New())
 		register(server, userGroup, "/login", loginhandler.New())
 	}
 }
 
-func registerPrivateHandlers(server *Server, root *gin.RouterGroup) {
-	root.Use(middlewares.AuthMiddleware(server.useCases))
+func registerPrivateHandlers(server *Server, rootGroup *gin.RouterGroup) {
+	rootGroup.Use(middlewares.AuthMiddleware(server.useCases))
 }
 
 type Server struct {
