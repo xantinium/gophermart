@@ -8,11 +8,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/xantinium/gophermart/internal/consts"
 	"github.com/xantinium/gophermart/internal/logger"
 	"github.com/xantinium/gophermart/internal/models"
 	"github.com/xantinium/gophermart/internal/presentation/rest/handlers"
 	"github.com/xantinium/gophermart/internal/tools"
 )
+
+var errInvalidContentType = errors.New("invalid Content-Type header value")
 
 func New() h {
 	return h{}
@@ -30,6 +33,8 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer) {
 	orderNum, err := parseRequest(ctx)
 	if err != nil {
 		switch {
+		case errors.Is(err, errInvalidContentType):
+			ctx.AbortWithStatus(http.StatusBadRequest)
 		case errors.Is(err, models.ErrInvalidOrderNum):
 			ctx.AbortWithStatus(http.StatusUnprocessableEntity)
 		default:
@@ -63,6 +68,10 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer) {
 }
 
 func parseRequest(ctx *gin.Context) (string, error) {
+	if ctx.GetHeader(consts.HeaderContentType) != "text/plain" {
+		return "", errInvalidContentType
+	}
+
 	reqBody, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		return "", err
