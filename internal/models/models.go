@@ -26,26 +26,41 @@ func (status OrderStatus) String() string {
 	}
 }
 
+type baseStruct struct {
+	id      int
+	created time.Time
+	updated time.Time
+}
+
+func (base baseStruct) ID() int {
+	return base.id
+}
+
+func (base baseStruct) Created() time.Time {
+	return base.created
+}
+
+func (base baseStruct) Updated() time.Time {
+	return base.updated
+}
+
 func NewUser(id int, login, passwordHash string, created, updated time.Time) User {
 	return User{
-		id:           id,
+		baseStruct: baseStruct{
+			id:      id,
+			created: created,
+			updated: updated,
+		},
 		login:        login,
 		passwordHash: passwordHash,
-		created:      created,
-		updated:      updated,
 	}
 }
 
 type User struct {
-	id           int
+	baseStruct
+
 	login        string
 	passwordHash string
-	created      time.Time
-	updated      time.Time
-}
-
-func (user User) ID() int {
-	return user.id
 }
 
 func (user User) Login() string {
@@ -56,10 +71,35 @@ func (user User) PasswordHash() string {
 	return user.passwordHash
 }
 
-func (user User) Created() time.Time {
-	return user.created
+func NewOrder(id int, number string, userID int, status OrderStatus, created, updated time.Time) Order {
+	return Order{
+		baseStruct: baseStruct{
+			id:      id,
+			created: created,
+			updated: updated,
+		},
+		number: number,
+		userID: userID,
+		status: status,
+	}
 }
 
-func (user User) Updated() time.Time {
-	return user.updated
+type Order struct {
+	baseStruct
+
+	number string
+	userID int
+	status OrderStatus
+}
+
+func (order Order) Number() string {
+	return order.number
+}
+
+func (order Order) UserID() int {
+	return order.userID
+}
+
+func (order Order) Status() OrderStatus {
+	return order.status
 }

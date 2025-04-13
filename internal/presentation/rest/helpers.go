@@ -30,6 +30,12 @@ func register[T any](server handlers.RestServer, group *gin.RouterGroup, path st
 	})
 }
 
+func registerCustom(server handlers.RestServer, group *gin.RouterGroup, path string, handler handlers.CustomRestHandler) {
+	group.Handle(handler.GetMethod(), path, func(ctx *gin.Context) {
+		handler.Handle(ctx, server)
+	})
+}
+
 type restError struct {
 	Error string `json:"error"`
 }

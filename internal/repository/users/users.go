@@ -6,7 +6,7 @@ import (
 	"github.com/xantinium/gophermart/internal/models"
 )
 
-func NewUsersRepository(storage UsersStorage) *UsersRepository {
+func New(storage UsersStorage) *UsersRepository {
 	return &UsersRepository{
 		storage: storage,
 	}

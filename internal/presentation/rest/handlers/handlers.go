@@ -40,3 +40,8 @@ type RestHandler[T any] interface {
 	Parse(ctx *gin.Context) (T, error)
 	Handle(ctx *gin.Context, server RestServer, req T) (int, any, error)
 }
+
+type CustomRestHandler interface {
+	GetMethod() string
+	Handle(ctx *gin.Context, server RestServer)
+}

@@ -1,23 +1,27 @@
 package usecases
 
 import (
-	"github.com/xantinium/gophermart/internal/repository/tokensrepo"
+	ordersrepo "github.com/xantinium/gophermart/internal/repository/orders"
+	tokensrepo "github.com/xantinium/gophermart/internal/repository/tokens"
 	usersrepo "github.com/xantinium/gophermart/internal/repository/users"
 )
 
-type UseCasesOptions struct {
+type Options struct {
 	UsersRepo  *usersrepo.UsersRepository
 	TokensRepo *tokensrepo.TokensRepository
+	OrdersRepo *ordersrepo.OrdersRepository
 }
 
-func NewUseCases(opts UseCasesOptions) *UseCases {
+func New(opts Options) *UseCases {
 	return &UseCases{
 		usersRepo:  opts.UsersRepo,
 		tokensRepo: opts.TokensRepo,
+		ordersRepo: opts.OrdersRepo,
 	}
 }
 
 type UseCases struct {
 	usersRepo  *usersrepo.UsersRepository
 	tokensRepo *tokensrepo.TokensRepository
+	ordersRepo *ordersrepo.OrdersRepository
 }

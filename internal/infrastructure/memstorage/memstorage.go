@@ -21,13 +21,16 @@ type MemStorage struct {
 	tokens map[string]tokenInfo
 }
 
-func (storage *MemStorage) HasToken(_ context.Context, token string) (bool, error) {
+func (storage *MemStorage) GetByToken(_ context.Context, token string) (int, error) {
 	storage.mx.RLock()
 	defer storage.mx.RUnlock()
 
-	_, ok := storage.tokens[token]
+	info, ok := storage.tokens[token]
+	if !ok {
+		return 0, models.ErrNotFound
+	}
 
-	return ok, nil
+	return info.UserID, nil
 }
 
 func (storage *MemStorage) SetToken(_ context.Context, userID int, token string) error {

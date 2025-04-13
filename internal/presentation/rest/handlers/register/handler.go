@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/xantinium/gophermart/internal/logger"
 	"github.com/xantinium/gophermart/internal/models"
 	"github.com/xantinium/gophermart/internal/presentation/rest/handlers"
 )
@@ -24,6 +25,7 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer, req request) (int,
 		case errors.Is(err, models.ErrAlreadyExists):
 			return http.StatusConflict, response{}, fmt.Errorf("user with login %q already exists", req.Login)
 		default:
+			logger.Errorf("failed to register user: %v", err)
 			return http.StatusInternalServerError, response{}, err
 		}
 	}

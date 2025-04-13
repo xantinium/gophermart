@@ -10,8 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/xantinium/gophermart/internal/logger"
-	"github.com/xantinium/gophermart/internal/presentation/rest/handlers/loginhandler"
-	"github.com/xantinium/gophermart/internal/presentation/rest/handlers/registerhandler"
+	createorderhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/create_order"
+	loginhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
+	registerhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/register"
 	"github.com/xantinium/gophermart/internal/presentation/rest/middlewares"
 	"github.com/xantinium/gophermart/internal/usecases"
 )
@@ -58,6 +59,15 @@ func registerPublicHandlers(server *Server, rootGroup *gin.RouterGroup) {
 
 func registerPrivateHandlers(server *Server, rootGroup *gin.RouterGroup) {
 	rootGroup.Use(middlewares.AuthMiddleware(server.useCases))
+
+	userGroup := rootGroup.Group("/user")
+	{
+	}
+
+	ordersGroup := userGroup.Group("/orders")
+	{
+		registerCustom(server, ordersGroup, "", createorderhandler.New())
+	}
 }
 
 type Server struct {

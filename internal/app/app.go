@@ -6,7 +6,8 @@ import (
 	"github.com/xantinium/gophermart/internal/infrastructure/memstorage"
 	"github.com/xantinium/gophermart/internal/infrastructure/postgres"
 	"github.com/xantinium/gophermart/internal/presentation/rest"
-	"github.com/xantinium/gophermart/internal/repository/tokensrepo"
+	ordersrepo "github.com/xantinium/gophermart/internal/repository/orders"
+	tokensrepo "github.com/xantinium/gophermart/internal/repository/tokens"
 	usersrepo "github.com/xantinium/gophermart/internal/repository/users"
 	"github.com/xantinium/gophermart/internal/usecases"
 )
@@ -27,9 +28,10 @@ func New(opts Options) *App {
 	server := rest.NewServer(rest.ServerOptions{
 		IsDev: opts.IsDev,
 		Addr:  opts.Addr,
-		UseCases: usecases.NewUseCases(usecases.UseCasesOptions{
-			UsersRepo:  usersrepo.NewUsersRepository(psqlClient),
-			TokensRepo: tokensrepo.NewTokensRepository(memstorage.New()),
+		UseCases: usecases.New(usecases.Options{
+			UsersRepo:  usersrepo.New(psqlClient),
+			TokensRepo: tokensrepo.New(memstorage.New()),
+			OrdersRepo: ordersrepo.New(psqlClient),
 		}),
 	})
 

@@ -35,17 +35,18 @@ func (cases *UseCases) AuthorizeUser(ctx context.Context, login, password string
 	return token, err
 }
 
-func (cases *UseCases) VerifyUserAuthorization(ctx context.Context, token string) error {
-	exists, err := cases.tokensRepo.IsAuthorized(ctx, token)
+func (cases *UseCases) VerifyUserAuthorization(ctx context.Context, token string) (int, error) {
+	userID, err := cases.tokensRepo.GetAuthorizedUser(ctx, token)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if !exists {
-		return models.ErrNotFound
+	err = cases.tokensRepo.RefreshToken(ctx, token)
+	if err != nil {
+		return 0, err
 	}
 
-	return cases.tokensRepo.RefreshToken(ctx, token)
+	return userID, nil
 }
 
 func (cases *UseCases) ClearExpiredTokens(ctx context.Context) error {

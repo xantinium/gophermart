@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/xantinium/gophermart/internal/logger"
 	"github.com/xantinium/gophermart/internal/models"
 	"github.com/xantinium/gophermart/internal/presentation/rest/handlers"
 	"github.com/xantinium/gophermart/internal/tools"
@@ -27,6 +28,7 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer, req request) (int,
 		case errors.Is(err, models.ErrFailedToMatch):
 			return http.StatusUnauthorized, response{}, fmt.Errorf("password does not match")
 		default:
+			logger.Errorf("failed to login: %v", err)
 			return http.StatusInternalServerError, response{}, err
 		}
 	}
