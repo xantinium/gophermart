@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
@@ -11,6 +12,8 @@ import (
 
 // InsertOrder добавляет заказ в таблицу заказов.
 // Дополнительно возвращает признак создания заказа.
+//
+// TODO: скорее всего может быть решено одним запросом.
 func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) (bool, error) {
 	now := time.Now()
 	b := sqlbuilder.NewInsertBuilder()
@@ -18,24 +21,29 @@ func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, numbe
 	b.InsertInto(OrdersTable)
 	b.Cols("number", "user_id", "status", "accrual", "created", "updated")
 	b.Values(number, userID, status, accrual, now, now)
-	b.SQL("ON CONFLICT (number) DO NOTHING")
-	b.Returning("user_id")
 
 	query, args := b.Build()
 
-	row := client.db.QueryRowContext(ctx, query, args...)
-	if row.Err() != nil {
-		return false, convertError(row.Err())
-	}
-
-	var orderUserID int
-	err := row.Scan(&orderUserID)
+	_, err := client.db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return false, convertError(err)
-	}
+		err = convertError(err)
 
-	if orderUserID != userID {
-		return false, models.ErrAlreadyExists
+		switch {
+		case errors.Is(err, models.ErrAlreadyExists):
+			var orderUserID int
+			orderUserID, err = client.findUserIDByNumber(ctx, number)
+			if err != nil {
+				return false, err
+			}
+
+			if orderUserID != userID {
+				return false, models.ErrAlreadyExists
+			}
+
+			return false, nil
+		default:
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -80,4 +88,24 @@ func (client *PostgresClient) FindOrdersByUserID(ctx context.Context, userID int
 	}
 
 	return orders, nil
+}
+
+func (client *PostgresClient) findUserIDByNumber(ctx context.Context, number string) (int, error) {
+	b := sqlbuilder.NewSelectBuilder()
+
+	b.Select("user_id")
+	b.From(OrdersTable)
+	b.Where(b.Equal("number", number))
+
+	query, args := b.Build()
+
+	row := client.db.QueryRowContext(ctx, query, args...)
+	if row.Err() != nil {
+		return 0, convertError(row.Err())
+	}
+
+	var userID int
+	err := row.Scan(&userID)
+
+	return userID, convertError(err)
 }
