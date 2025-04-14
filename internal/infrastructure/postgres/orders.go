@@ -73,10 +73,11 @@ func (client *PostgresClient) FindOrdersByUserID(ctx context.Context, userID int
 		}
 
 		var (
-			orderID, orderUserID, orderAccrual int
-			orderNumber                        string
-			orderStatus                        models.OrderStatus
-			orderCreated, orderUpdated         time.Time
+			orderID, orderUserID       int
+			orderNumber                string
+			orderStatus                models.OrderStatus
+			orderAccrual               *int
+			orderCreated, orderUpdated time.Time
 		)
 
 		err = rows.Scan(&orderID, &orderNumber, &orderUserID, &orderStatus, &orderAccrual, &orderCreated, &orderUpdated)
@@ -85,6 +86,10 @@ func (client *PostgresClient) FindOrdersByUserID(ctx context.Context, userID int
 		}
 
 		orders = append(orders, models.NewOrder(orderID, orderNumber, orderUserID, orderStatus, orderAccrual, orderCreated, orderUpdated))
+	}
+
+	if len(orders) == 0 {
+		return nil, models.ErrNotFound
 	}
 
 	return orders, nil

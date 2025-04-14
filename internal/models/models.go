@@ -71,7 +71,7 @@ func (user User) PasswordHash() string {
 	return user.passwordHash
 }
 
-func NewOrder(id int, number string, userID int, status OrderStatus, accrual int, created, updated time.Time) Order {
+func NewOrder(id int, number string, userID int, status OrderStatus, accrual *int, created, updated time.Time) Order {
 	return Order{
 		baseStruct: baseStruct{
 			id:      id,
@@ -91,7 +91,7 @@ type Order struct {
 	number  string
 	userID  int
 	status  OrderStatus
-	accrual int
+	accrual *int
 }
 
 func (order Order) Number() string {
@@ -106,6 +106,6 @@ func (order Order) Status() OrderStatus {
 	return order.status
 }
 
-func (order Order) Accrual() int {
+func (order Order) Accrual() *int {
 	return order.accrual
 }

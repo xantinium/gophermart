@@ -2,7 +2,6 @@ package tools
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -35,10 +34,6 @@ func GetUserID(ctx *gin.Context) int {
 
 func SetUserID(ctx *gin.Context, userID int) {
 	ctx.Set(userIDKey, userID)
-}
-
-func SetContentLength(ctx *gin.Context, length int) {
-	ctx.Header(consts.HeaderContentLength, strconv.Itoa(length))
 }
 
 func WriteJSON(ctx *gin.Context, statusCode int, json []byte) {

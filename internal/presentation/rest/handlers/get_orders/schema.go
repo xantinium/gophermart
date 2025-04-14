@@ -19,7 +19,7 @@ func (h) Parse(ctx *gin.Context) (request, error) {
 type orderItem struct {
 	Number     string `json:"number"`
 	Status     string `json:"status"`
-	Accrual    int    `json:"accrual"`
+	Accrual    *int   `json:"accrual,omitempty"`
 	UploadedAt string `json:"uploaded_at"`
 }
 

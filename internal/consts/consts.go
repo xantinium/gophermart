@@ -5,5 +5,4 @@ const (
 	HeaderAcceptEncoding  = "Accept-Encoding"
 	HeaderContentEncoding = "Content-Encoding"
 	HeaderContentType     = "Content-Type"
-	HeaderContentLength   = "Content-Length"
 )
