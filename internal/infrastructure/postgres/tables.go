@@ -50,6 +50,7 @@ func (client *PostgresClient) initOrdersTable(ctx context.Context) error {
 	b.Define("number", "TEXT", "NOT NULL", "UNIQUE")
 	b.Define("user_id", "INT", fmt.Sprintf("REFERENCES %s(id)", UsersTable))
 	b.Define("status", "SMALLINT", "NOT NULL")
+	b.Define("accrual", "INT")
 	b.Define("created", "TIMESTAMP", "NOT NULL")
 	b.Define("updated", "TIMESTAMP", "NOT NULL")
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/xantinium/gophermart/internal/logger"
 	createorderhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/create_order"
+	getordershandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/get_orders"
 	loginhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
 	registerhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/register"
 	"github.com/xantinium/gophermart/internal/presentation/rest/middlewares"
@@ -67,6 +68,7 @@ func registerPrivateHandlers(server *Server, rootGroup *gin.RouterGroup) {
 	ordersGroup := userGroup.Group("/orders")
 	{
 		registerCustom(server, ordersGroup, "", createorderhandler.New())
+		register(server, ordersGroup, "", getordershandler.New())
 	}
 }
 

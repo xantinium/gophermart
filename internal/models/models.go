@@ -71,25 +71,27 @@ func (user User) PasswordHash() string {
 	return user.passwordHash
 }
 
-func NewOrder(id int, number string, userID int, status OrderStatus, created, updated time.Time) Order {
+func NewOrder(id int, number string, userID int, status OrderStatus, accrual int, created, updated time.Time) Order {
 	return Order{
 		baseStruct: baseStruct{
 			id:      id,
 			created: created,
 			updated: updated,
 		},
-		number: number,
-		userID: userID,
-		status: status,
+		number:  number,
+		userID:  userID,
+		status:  status,
+		accrual: accrual,
 	}
 }
 
 type Order struct {
 	baseStruct
 
-	number string
-	userID int
-	status OrderStatus
+	number  string
+	userID  int
+	status  OrderStatus
+	accrual int
 }
 
 func (order Order) Number() string {
@@ -102,4 +104,8 @@ func (order Order) UserID() int {
 
 func (order Order) Status() OrderStatus {
 	return order.status
+}
+
+func (order Order) Accrual() int {
+	return order.accrual
 }

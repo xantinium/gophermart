@@ -15,7 +15,7 @@ func (cases *UseCases) CreateOrder(ctx context.Context, number string, userID in
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrNotFound):
-			err = cases.ordersRepo.CreateOrder(ctx, userID, number, models.OrderStatusNew)
+			err = cases.ordersRepo.CreateOrder(ctx, userID, number, models.OrderStatusNew, nil)
 			if err != nil {
 				return false, err
 			}
@@ -31,4 +31,8 @@ func (cases *UseCases) CreateOrder(ctx context.Context, number string, userID in
 	}
 
 	return false, nil
+}
+
+func (cases *UseCases) GetOrders(ctx context.Context, userID int) ([]models.Order, error) {
+	return cases.ordersRepo.GetOrders(ctx, userID)
 }
