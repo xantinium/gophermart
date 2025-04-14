@@ -9,49 +9,36 @@ import (
 	"github.com/xantinium/gophermart/internal/models"
 )
 
-func (client *PostgresClient) FindOrderByNumber(ctx context.Context, number string) (models.Order, error) {
-	b := sqlbuilder.NewSelectBuilder()
-
-	b.Select("*")
-	b.From(OrdersTable)
-	b.Where(b.Equal("number", number))
-	b.Limit(1)
-
-	query, args := b.Build()
-
-	row := client.db.QueryRowContext(ctx, query, args...)
-	if row.Err() != nil {
-		return models.Order{}, convertError(row.Err())
-	}
-
-	var (
-		orderID, orderUserID, orderAccrual int
-		orderNumber                        string
-		orderStatus                        models.OrderStatus
-		orderCreated, orderUpdated         time.Time
-	)
-
-	err := row.Scan(&orderID, &orderNumber, &orderUserID, &orderStatus, &orderAccrual, &orderCreated, &orderUpdated)
-	if err != nil {
-		return models.Order{}, convertError(err)
-	}
-
-	return models.NewOrder(orderID, orderNumber, orderUserID, orderStatus, orderAccrual, orderCreated, orderUpdated), nil
-}
-
-func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) error {
+// InsertOrder добавляет заказ в таблицу заказов.
+// Дополнительно возвращает признак создания заказа.
+func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) (bool, error) {
 	now := time.Now()
 	b := sqlbuilder.NewInsertBuilder()
 
 	b.InsertInto(OrdersTable)
 	b.Cols("number", "user_id", "status", "accrual", "created", "updated")
 	b.Values(number, userID, status, accrual, now, now)
+	b.SQL("ON CONFLICT (number) DO NOTHING")
+	b.Returning("user_id")
 
 	query, args := b.Build()
 
-	_, err := client.db.ExecContext(ctx, query, args...)
+	row := client.db.QueryRowContext(ctx, query, args...)
+	if row.Err() != nil {
+		return false, convertError(row.Err())
+	}
 
-	return convertError(err)
+	var orderUserID int
+	err := row.Scan(&orderUserID)
+	if err != nil {
+		return false, convertError(err)
+	}
+
+	if orderUserID != userID {
+		return false, models.ErrAlreadyExists
+	}
+
+	return true, nil
 }
 
 func (client *PostgresClient) FindOrdersByUserID(ctx context.Context, userID int) ([]models.Order, error) {

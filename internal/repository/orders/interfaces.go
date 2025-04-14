@@ -7,7 +7,6 @@ import (
 )
 
 type OrdersStorage interface {
-	FindOrderByNumber(ctx context.Context, number string) (models.Order, error)
-	InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) error
+	InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) (bool, error)
 	FindOrdersByUserID(ctx context.Context, userID int) ([]models.Order, error)
 }

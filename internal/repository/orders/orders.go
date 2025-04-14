@@ -16,11 +16,7 @@ type OrdersRepository struct {
 	storage OrdersStorage
 }
 
-func (repo *OrdersRepository) GetOrderByNumber(ctx context.Context, number string) (models.Order, error) {
-	return repo.storage.FindOrderByNumber(ctx, number)
-}
-
-func (repo *OrdersRepository) CreateOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) error {
+func (repo *OrdersRepository) CreateOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual *int) (bool, error) {
 	return repo.storage.InsertOrder(ctx, userID, number, status, accrual)
 }
 
