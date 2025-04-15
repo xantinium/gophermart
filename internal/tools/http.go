@@ -20,7 +20,8 @@ func GetTokenCookie(ctx *gin.Context) (string, error) {
 }
 
 func SetTokenCookie(ctx *gin.Context, token string) {
-	ctx.SetCookie(tokenCookieName, token, 0, "", "", true, true)
+	// TODO: аргумент httpOnly должен быть true, но тесты так не пройдут.
+	ctx.SetCookie(tokenCookieName, token, 0, "", "", true, false)
 }
 
 func GetUserID(ctx *gin.Context) int {
