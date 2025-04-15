@@ -22,21 +22,23 @@ type WorkerPoolOptions struct {
 
 func NewWorkerPool(opts WorkerPoolOptions) *WorkerPool {
 	return &WorkerPool{
-		poolSize:       opts.PoolSize,
-		accrualHost:    opts.AccrualHost,
-		useCases:       opts.UseCases,
-		reader:         newOrdersReader(opts.UseCases, opts.PoolSize),
-		requestLimiter: tools.NewSemaphore(10),
+		poolSize:         opts.PoolSize,
+		accrualHost:      opts.AccrualHost,
+		useCases:         opts.UseCases,
+		reader:           newOrdersReader(opts.UseCases, opts.PoolSize),
+		requestLimiter:   tools.NewSemaphore(10),
+		processingOrders: &ordersSet{set: map[string]struct{}{}},
 	}
 }
 
 type WorkerPool struct {
-	wg             sync.WaitGroup
-	poolSize       int
-	accrualHost    string
-	useCases       *usecases.UseCases
-	reader         *ordersReader
-	requestLimiter *tools.Semaphore
+	wg               sync.WaitGroup
+	poolSize         int
+	accrualHost      string
+	useCases         *usecases.UseCases
+	reader           *ordersReader
+	requestLimiter   *tools.Semaphore
+	processingOrders *ordersSet
 }
 
 func (w *WorkerPool) Run(ctx context.Context) {
@@ -54,6 +56,7 @@ func (w *WorkerPool) Run(ctx context.Context) {
 				orders, err := w.reader.ReadOrders(ctx)
 				if err != nil {
 					logger.Errorf("failed to read orders: %v", err)
+					time.Sleep(time.Millisecond * 100)
 					continue
 				}
 
@@ -63,6 +66,12 @@ func (w *WorkerPool) Run(ctx context.Context) {
 				}
 
 				for _, order := range orders {
+					if w.processingOrders.Has(order.Number()) {
+						time.Sleep(time.Millisecond * 100)
+						continue
+					}
+
+					w.processingOrders.Add(order.Number())
 					ordersChan <- order
 				}
 			}
@@ -83,26 +92,44 @@ func (w *WorkerPool) Run(ctx context.Context) {
 						return
 					}
 
-					info, err := w.requestOrdedInfo(ctx, order.Number())
+					var (
+						err  error
+						info orderInfo
+					)
+
+					tools.DefaulRetrier.Exec(func() bool {
+						info, err = w.requestOrdedInfo(ctx, order.Number())
+						return err != nil
+					})
+
+					// TODO: возможно тут стоит устанавливать статус Invalid.
 					if err != nil {
-						logger.Errorf("failed to request order info: %v", err)
+						logger.Errorf("failed to request order %q info: %v", order.Number(), err)
+						w.processingOrders.Remove(order.Number())
 						continue
 					}
 
 					if info.Status == order.Status() {
 						logger.Infof("order has no changes")
+						w.processingOrders.Remove(order.Number())
 						continue
 					}
 
 					switch info.Status {
 					case models.OrderStatusProcessing:
-						w.useCases.MarkOrderAsProcessing(ctx, order.Number())
+						err = w.useCases.MarkOrderAsProcessing(ctx, order.Number())
 					case models.OrderStatusInvalid:
-						w.useCases.MarkOrderAsInvalid(ctx, order.Number())
+						err = w.useCases.MarkOrderAsInvalid(ctx, order.Number())
 					case models.OrderStatusProcessed:
-						w.useCases.MarkOrderAsProcessed(ctx, order.Number(), info.Accrual)
+						err = w.useCases.MarkOrderAsProcessed(ctx, order.Number(), info.Accrual)
 					default:
-						logger.Infof("order still in processing")
+						logger.Infof("order %s still in processing", order.Number())
+					}
+
+					w.processingOrders.Remove(order.Number())
+
+					if err != nil {
+						logger.Infof("failed to process order %q", order.Number())
 					}
 				}
 			}
@@ -177,4 +204,31 @@ func parseOrderStatus(maybeStatus string) (models.OrderStatus, error) {
 	default:
 		return 0, fmt.Errorf("unknown status %q", maybeStatus)
 	}
+}
+
+type ordersSet struct {
+	mx  sync.RWMutex
+	set map[string]struct{}
+}
+
+func (orders *ordersSet) Has(number string) bool {
+	orders.mx.RLock()
+	defer orders.mx.RUnlock()
+
+	_, exists := orders.set[number]
+	return exists
+}
+
+func (orders *ordersSet) Add(number string) {
+	orders.mx.Lock()
+	defer orders.mx.Unlock()
+
+	orders.set[number] = struct{}{}
+}
+
+func (orders *ordersSet) Remove(number string) {
+	orders.mx.Lock()
+	defer orders.mx.Unlock()
+
+	delete(orders.set, number)
 }
