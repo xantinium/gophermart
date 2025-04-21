@@ -14,7 +14,7 @@ func (client *PostgresClient) InsertWithdrawal(ctx context.Context, userID int, 
 	b := sqlbuilder.NewInsertBuilder()
 
 	b.InsertInto(WithdrawalsTable)
-	b.Cols("order", "sum", "user_id", "created", "updated")
+	b.Cols("order_id", "sum", "user_id", "created", "updated")
 	b.Values(order, sum, userID, now, now)
 
 	query, args := b.Build()
