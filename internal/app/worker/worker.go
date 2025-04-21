@@ -151,7 +151,7 @@ func (w *WorkerPool) requestOrdedInfo(ctx context.Context, number string) (order
 	w.requestLimiter.Acquire()
 	defer w.requestLimiter.Release()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s/api/orders/%s", w.accrualHost, number), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/api/orders/%s", w.accrualHost, number), nil)
 	if err != nil {
 		return orderInfo{}, err
 	}
