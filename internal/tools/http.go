@@ -20,7 +20,7 @@ func GetTokenCookie(ctx *gin.Context) (string, error) {
 }
 
 func SetTokenCookie(ctx *gin.Context, token string) {
-	ctx.SetCookie(tokenCookieName, token, 0, "", "", true, true)
+	ctx.SetCookie(tokenCookieName, token, 0, "", "", false, true)
 }
 
 func GetUserID(ctx *gin.Context) int {
