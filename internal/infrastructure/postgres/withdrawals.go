@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
@@ -61,6 +62,8 @@ func (client *PostgresClient) FindWithdrawalsByUserID(ctx context.Context, userI
 
 		withdrawals = append(withdrawals, models.NewWithdrawal(withdrawalID, withdrawalOrder, withdrawalSum, withdrawalUserID, withdrawalCreated, withdrawalUpdated))
 	}
+
+	log.Println(withdrawals)
 
 	if len(withdrawals) == 0 {
 		return nil, models.ErrNotFound
