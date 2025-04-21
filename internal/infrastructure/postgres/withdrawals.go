@@ -71,7 +71,7 @@ func (client *PostgresClient) FindWithdrawalsByUserID(ctx context.Context, userI
 func (client *PostgresClient) SumWithdrawn(ctx context.Context, userID int) (int, error) {
 	b := sqlbuilder.NewSelectBuilder()
 
-	b.Select("SUM(sum) as total_sum")
+	b.Select("COALESCE(SUM(sum), 0) as total_sum")
 	b.From(WithdrawalsTable)
 	b.Where(b.Equal("user_id", userID))
 

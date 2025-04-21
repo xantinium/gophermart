@@ -188,7 +188,7 @@ func (client *PostgresClient) UpdateOrder(ctx context.Context, number string, st
 func (client *PostgresClient) SumAccrual(ctx context.Context, userID int) (float64, error) {
 	b := sqlbuilder.NewSelectBuilder()
 
-	b.Select("SUM(accrual) as total_accrual")
+	b.Select("COALESCE(SUM(accrual), 0) as total_accrual")
 	b.From(OrdersTable)
 	b.Where(b.Equal("user_id", userID), b.Equal("status", models.OrderStatusProcessed))
 
