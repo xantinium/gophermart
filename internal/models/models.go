@@ -71,7 +71,7 @@ func (user User) PasswordHash() string {
 	return user.passwordHash
 }
 
-func NewOrder(id int, number string, userID int, status OrderStatus, accrual int, created, updated time.Time) Order {
+func NewOrder(id int, number string, userID int, status OrderStatus, accrual float64, created, updated time.Time) Order {
 	return Order{
 		baseStruct: baseStruct{
 			id:      id,
@@ -91,7 +91,7 @@ type Order struct {
 	number  string
 	userID  int
 	status  OrderStatus
-	accrual int
+	accrual float64
 }
 
 func (order Order) Number() string {
@@ -106,6 +106,39 @@ func (order Order) Status() OrderStatus {
 	return order.status
 }
 
-func (order Order) Accrual() int {
+func (order Order) Accrual() float64 {
 	return order.accrual
+}
+
+func NewWithdrawal(id int, order string, sum, userID int, created, updated time.Time) Withdrawal {
+	return Withdrawal{
+		baseStruct: baseStruct{
+			id:      id,
+			created: created,
+			updated: updated,
+		},
+		order:  order,
+		sum:    sum,
+		userID: userID,
+	}
+}
+
+type Withdrawal struct {
+	baseStruct
+
+	order  string
+	sum    int
+	userID int
+}
+
+func (withdrawal Withdrawal) Order() string {
+	return withdrawal.order
+}
+
+func (withdrawal Withdrawal) Sum() int {
+	return withdrawal.sum
+}
+
+func (withdrawal Withdrawal) UserID() int {
+	return withdrawal.userID
 }

@@ -14,7 +14,7 @@ import (
 // Дополнительно возвращает признак создания заказа.
 //
 // TODO: скорее всего может быть решено одним запросом.
-func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual int) (bool, error) {
+func (client *PostgresClient) InsertOrder(ctx context.Context, userID int, number string, status models.OrderStatus, accrual float64) (bool, error) {
 	now := time.Now()
 	b := sqlbuilder.NewInsertBuilder()
 
@@ -73,10 +73,11 @@ func (client *PostgresClient) FindOrdersByUserID(ctx context.Context, userID int
 		}
 
 		var (
-			orderID, orderUserID, orderAccrual int
-			orderNumber                        string
-			orderStatus                        models.OrderStatus
-			orderCreated, orderUpdated         time.Time
+			orderID, orderUserID       int
+			orderAccrual               float64
+			orderNumber                string
+			orderStatus                models.OrderStatus
+			orderCreated, orderUpdated time.Time
 		)
 
 		err = rows.Scan(&orderID, &orderNumber, &orderUserID, &orderStatus, &orderAccrual, &orderCreated, &orderUpdated)
@@ -144,10 +145,11 @@ func (client *PostgresClient) FindOrders(ctx context.Context, limit, offset int)
 		}
 
 		var (
-			orderID, orderUserID, orderAccrual int
-			orderNumber                        string
-			orderStatus                        models.OrderStatus
-			orderCreated, orderUpdated         time.Time
+			orderID, orderUserID       int
+			orderAccrual               float64
+			orderNumber                string
+			orderStatus                models.OrderStatus
+			orderCreated, orderUpdated time.Time
 		)
 
 		err = rows.Scan(&orderID, &orderNumber, &orderUserID, &orderStatus, &orderAccrual, &orderCreated, &orderUpdated)
@@ -165,7 +167,7 @@ func (client *PostgresClient) FindOrders(ctx context.Context, limit, offset int)
 	return orders, nil
 }
 
-func (client *PostgresClient) UpdateOrder(ctx context.Context, number string, status models.OrderStatus, accrual int) error {
+func (client *PostgresClient) UpdateOrder(ctx context.Context, number string, status models.OrderStatus, accrual float64) error {
 	now := time.Now()
 	b := sqlbuilder.NewUpdateBuilder()
 
@@ -181,4 +183,24 @@ func (client *PostgresClient) UpdateOrder(ctx context.Context, number string, st
 	}
 
 	return nil
+}
+
+func (client *PostgresClient) SumAccrual(ctx context.Context, userID int) (float64, error) {
+	b := sqlbuilder.NewSelectBuilder()
+
+	b.Select("SUM(accrual) as total_accrual")
+	b.From(OrdersTable)
+	b.Where(b.Equal("user_id", userID), b.Equal("status", models.OrderStatusProcessed))
+
+	query, args := b.Build()
+
+	row := client.db.QueryRowContext(ctx, query, args...)
+	if row.Err() != nil {
+		return 0, convertError(row.Err())
+	}
+
+	var totalAccrual float64
+	err := row.Scan(&totalAccrual)
+
+	return totalAccrual, convertError(err)
 }

@@ -144,7 +144,7 @@ func (w *WorkerPool) Wait() {
 type orderInfo struct {
 	Order   string
 	Status  models.OrderStatus
-	Accrual int
+	Accrual float64
 }
 
 func (w *WorkerPool) requestOrdedInfo(ctx context.Context, number string) (orderInfo, error) {
@@ -169,9 +169,9 @@ func (w *WorkerPool) requestOrdedInfo(ctx context.Context, number string) (order
 	}
 
 	var resp struct {
-		Order   string `json:"order"`
-		Status  string `json:"status"`
-		Accrual int    `json:"accrual"`
+		Order   string  `json:"order"`
+		Status  string  `json:"status"`
+		Accrual float64 `json:"accrual"`
 	}
 	err = tools.UnmarshalJSON(respBytes, &resp)
 	if err != nil {

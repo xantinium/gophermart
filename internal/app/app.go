@@ -10,6 +10,7 @@ import (
 	ordersrepo "github.com/xantinium/gophermart/internal/repository/orders"
 	tokensrepo "github.com/xantinium/gophermart/internal/repository/tokens"
 	usersrepo "github.com/xantinium/gophermart/internal/repository/users"
+	withdrawalsrepo "github.com/xantinium/gophermart/internal/repository/withdrawals"
 	"github.com/xantinium/gophermart/internal/usecases"
 )
 
@@ -27,9 +28,10 @@ func New(opts Options) *App {
 	}
 
 	cases := usecases.New(usecases.Options{
-		UsersRepo:  usersrepo.New(psqlClient),
-		TokensRepo: tokensrepo.New(memstorage.New()),
-		OrdersRepo: ordersrepo.New(psqlClient),
+		UsersRepo:       usersrepo.New(psqlClient),
+		TokensRepo:      tokensrepo.New(memstorage.New()),
+		OrdersRepo:      ordersrepo.New(psqlClient),
+		WithdrawalsRepo: withdrawalsrepo.New(psqlClient),
 	})
 
 	workerPool := worker.NewWorkerPool(worker.WorkerPoolOptions{

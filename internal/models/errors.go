@@ -11,4 +11,6 @@ var (
 	ErrFailedToMatch = errors.New("failed to match")
 	// ErrInvalidOrderNum ошибка: невалидный номер заказа.
 	ErrInvalidOrderNum = errors.New("invalid order number")
+	// ErrInsufficientBalance ошибка: недостаточно средств на балансе.
+	ErrInsufficientBalance = errors.New("insufficient balance")
 )

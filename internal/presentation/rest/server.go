@@ -11,9 +11,12 @@ import (
 
 	"github.com/xantinium/gophermart/internal/logger"
 	createorderhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/create_order"
+	getbalancehandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/get_balance"
 	getordershandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/get_orders"
+	getwithdrawalshandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/get_withdrawals"
 	loginhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/login"
 	registerhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/register"
+	withdrawhandler "github.com/xantinium/gophermart/internal/presentation/rest/handlers/withdraw"
 	"github.com/xantinium/gophermart/internal/presentation/rest/middlewares"
 	"github.com/xantinium/gophermart/internal/usecases"
 )
@@ -63,12 +66,19 @@ func registerPrivateHandlers(server *Server, rootGroup *gin.RouterGroup) {
 
 	userGroup := rootGroup.Group("/user")
 	{
+		register(server, userGroup, "/withdrawals", getwithdrawalshandler.New())
 	}
 
 	ordersGroup := userGroup.Group("/orders")
 	{
 		registerCustom(server, ordersGroup, "", createorderhandler.New())
 		register(server, ordersGroup, "", getordershandler.New())
+	}
+
+	balanceGroup := userGroup.Group("/balance")
+	{
+		register(server, balanceGroup, "", getbalancehandler.New())
+		register(server, balanceGroup, "/withdraw", withdrawhandler.New())
 	}
 }
 

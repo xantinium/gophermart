@@ -34,6 +34,6 @@ func (cases *UseCases) MarkOrderAsInvalid(ctx context.Context, number string) er
 	return cases.ordersRepo.UpdateOrder(ctx, number, models.OrderStatusInvalid, 0)
 }
 
-func (cases *UseCases) MarkOrderAsProcessed(ctx context.Context, number string, accrual int) error {
+func (cases *UseCases) MarkOrderAsProcessed(ctx context.Context, number string, accrual float64) error {
 	return cases.ordersRepo.UpdateOrder(ctx, number, models.OrderStatusProcessed, accrual)
 }
