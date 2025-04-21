@@ -34,14 +34,13 @@ type UseCases struct {
 
 type Balance struct {
 	AvaliableAccrual float64
-	TotalWithdrawn   int
+	TotalWithdrawn   float64
 }
 
 func (cases *UseCases) GetUserBalance(ctx context.Context, userID int) (Balance, error) {
 	var (
-		err            error
-		totalAccrual   float64
-		totalWithdrawn int
+		err                          error
+		totalAccrual, totalWithdrawn float64
 	)
 
 	totalAccrual, err = cases.ordersRepo.GetTotalAccrual(ctx, userID)
@@ -55,7 +54,7 @@ func (cases *UseCases) GetUserBalance(ctx context.Context, userID int) (Balance,
 	}
 
 	return Balance{
-		AvaliableAccrual: totalAccrual - float64(totalWithdrawn),
+		AvaliableAccrual: totalAccrual - totalWithdrawn,
 		TotalWithdrawn:   totalWithdrawn,
 	}, err
 }

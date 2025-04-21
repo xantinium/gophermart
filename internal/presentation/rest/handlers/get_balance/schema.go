@@ -18,5 +18,5 @@ func (h) Parse(ctx *gin.Context) (request, error) {
 
 type response struct {
 	Current   float64 `json:"current"`
-	Withdrawn int     `json:"withdrawn"`
+	Withdrawn float64 `json:"withdrawn"`
 }

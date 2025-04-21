@@ -110,7 +110,7 @@ func (order Order) Accrual() float64 {
 	return order.accrual
 }
 
-func NewWithdrawal(id int, order string, sum, userID int, created, updated time.Time) Withdrawal {
+func NewWithdrawal(id int, order string, sum float64, userID int, created, updated time.Time) Withdrawal {
 	return Withdrawal{
 		baseStruct: baseStruct{
 			id:      id,
@@ -127,7 +127,7 @@ type Withdrawal struct {
 	baseStruct
 
 	order  string
-	sum    int
+	sum    float64
 	userID int
 }
 
@@ -135,7 +135,7 @@ func (withdrawal Withdrawal) Order() string {
 	return withdrawal.order
 }
 
-func (withdrawal Withdrawal) Sum() int {
+func (withdrawal Withdrawal) Sum() float64 {
 	return withdrawal.sum
 }
 

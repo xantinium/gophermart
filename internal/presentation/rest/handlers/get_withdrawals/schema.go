@@ -17,9 +17,9 @@ func (h) Parse(ctx *gin.Context) (request, error) {
 }
 
 type withdrawalItem struct {
-	Order       string `json:"number"`
-	Sum         int    `json:"status"`
-	ProcessedAt string `json:"processed_at"`
+	Order       string  `json:"number"`
+	Sum         float64 `json:"status"`
+	ProcessedAt string  `json:"processed_at"`
 }
 
 type response = []withdrawalItem

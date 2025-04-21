@@ -16,7 +16,7 @@ type WithdrawalsRepository struct {
 	storage WithdrawalsStorage
 }
 
-func (repo *WithdrawalsRepository) CreateWithdrawal(ctx context.Context, userID int, order string, sum int) error {
+func (repo *WithdrawalsRepository) CreateWithdrawal(ctx context.Context, userID int, order string, sum float64) error {
 	return repo.storage.InsertWithdrawal(ctx, userID, order, sum)
 }
 
@@ -24,6 +24,6 @@ func (repo *WithdrawalsRepository) GetWithdrawalsByUserID(ctx context.Context, u
 	return repo.storage.FindWithdrawalsByUserID(ctx, userID)
 }
 
-func (repo *WithdrawalsRepository) GetTotalWithdrawn(ctx context.Context, userID int) (int, error) {
+func (repo *WithdrawalsRepository) GetTotalWithdrawn(ctx context.Context, userID int) (float64, error) {
 	return repo.storage.SumWithdrawn(ctx, userID)
 }

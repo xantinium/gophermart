@@ -69,7 +69,7 @@ func (client *PostgresClient) initWithdrawalsTable(ctx context.Context) error {
 	b.CreateTable(WithdrawalsTable)
 	b.Define("id", "SERIAL", "PRIMARY KEY")
 	b.Define("order_id", "TEXT", "NOT NULL", "UNIQUE")
-	b.Define("sum", "INT", "NOT NULL")
+	b.Define("sum", "REAL", "NOT NULL")
 	b.Define("user_id", "INT", fmt.Sprintf("REFERENCES %s(id)", UsersTable))
 	b.Define("created", "TIMESTAMP", "NOT NULL")
 	b.Define("updated", "TIMESTAMP", "NOT NULL")

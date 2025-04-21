@@ -6,7 +6,7 @@ import (
 	"github.com/xantinium/gophermart/internal/models"
 )
 
-func (cases *UseCases) CreateWithdrawal(ctx context.Context, order string, sum, userID int) error {
+func (cases *UseCases) CreateWithdrawal(ctx context.Context, order string, sum float64, userID int) error {
 	balance, err := cases.GetUserBalance(ctx, userID)
 	if err != nil {
 		return err

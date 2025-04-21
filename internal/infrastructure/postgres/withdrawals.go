@@ -9,7 +9,7 @@ import (
 	"github.com/xantinium/gophermart/internal/models"
 )
 
-func (client *PostgresClient) InsertWithdrawal(ctx context.Context, userID int, order string, sum int) error {
+func (client *PostgresClient) InsertWithdrawal(ctx context.Context, userID int, order string, sum float64) error {
 	now := time.Now()
 	b := sqlbuilder.NewInsertBuilder()
 
@@ -48,9 +48,10 @@ func (client *PostgresClient) FindWithdrawalsByUserID(ctx context.Context, userI
 		}
 
 		var (
-			withdrawalID, withdrawalSum, withdrawalUserID int
-			withdrawalOrder                               string
-			withdrawalCreated, withdrawalUpdated          time.Time
+			withdrawalID, withdrawalUserID       int
+			withdrawalSum                        float64
+			withdrawalOrder                      string
+			withdrawalCreated, withdrawalUpdated time.Time
 		)
 
 		err = rows.Scan(&withdrawalID, &withdrawalOrder, &withdrawalSum, &withdrawalUserID, &withdrawalCreated, &withdrawalUpdated)
@@ -68,7 +69,7 @@ func (client *PostgresClient) FindWithdrawalsByUserID(ctx context.Context, userI
 	return withdrawals, nil
 }
 
-func (client *PostgresClient) SumWithdrawn(ctx context.Context, userID int) (int, error) {
+func (client *PostgresClient) SumWithdrawn(ctx context.Context, userID int) (float64, error) {
 	b := sqlbuilder.NewSelectBuilder()
 
 	b.Select("COALESCE(SUM(sum), 0) as total_sum")
@@ -82,7 +83,7 @@ func (client *PostgresClient) SumWithdrawn(ctx context.Context, userID int) (int
 		return 0, convertError(row.Err())
 	}
 
-	var totalSum int
+	var totalSum float64
 	err := row.Scan(&totalSum)
 
 	return totalSum, convertError(err)
