@@ -2,6 +2,7 @@ package getwithdrawalshandler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -33,6 +34,8 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer, req request) (int,
 		}
 	}
 
+	log.Println(withdrawals)
+
 	res := make(response, len(withdrawals))
 	for i := range withdrawals {
 		res[i] = withdrawalItem{
@@ -41,6 +44,8 @@ func (h) Handle(ctx *gin.Context, server handlers.RestServer, req request) (int,
 			ProcessedAt: withdrawals[i].Created().Format(time.RFC3339),
 		}
 	}
+
+	log.Println(res)
 
 	return http.StatusOK, res, nil
 }
