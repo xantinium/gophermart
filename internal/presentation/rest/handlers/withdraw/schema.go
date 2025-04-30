@@ -14,7 +14,7 @@ func (h) GetMethod() string {
 
 type request struct {
 	Order string  `json:"order" validate:"required"`
-	Sum   float64 `json:"sum" validate:"required,gt=0"`
+	Sum   float32 `json:"sum" validate:"required,gt=0"`
 }
 
 func (h) Parse(ctx *gin.Context) (request, error) {

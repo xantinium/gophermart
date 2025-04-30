@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/huandu/go-sqlbuilder"
 )
@@ -28,7 +27,7 @@ func (client *PostgresClient) initUsersTable(ctx context.Context) error {
 	b := sqlbuilder.NewCreateTableBuilder()
 
 	b.IfNotExists()
-	b.CreateTable(UsersTable)
+	b.CreateTable("users")
 	b.Define("id", "SERIAL", "PRIMARY KEY")
 	b.Define("login", "VARCHAR(50)", "NOT NULL", "UNIQUE")
 	b.Define("password_hash", "VARCHAR(64)", "NOT NULL")
@@ -37,19 +36,19 @@ func (client *PostgresClient) initUsersTable(ctx context.Context) error {
 
 	query, args := b.Build()
 
-	_, err := client.db.ExecContext(ctx, query, args...)
+	_, err := client.pool.Exec(ctx, query, args...)
 
-	return convertError(err)
+	return err
 }
 
 func (client *PostgresClient) initOrdersTable(ctx context.Context) error {
 	b := sqlbuilder.NewCreateTableBuilder()
 
 	b.IfNotExists()
-	b.CreateTable(OrdersTable)
+	b.CreateTable("orders")
 	b.Define("id", "SERIAL", "PRIMARY KEY")
 	b.Define("number", "TEXT", "NOT NULL", "UNIQUE")
-	b.Define("user_id", "INT", fmt.Sprintf("REFERENCES %s(id)", UsersTable))
+	b.Define("user_id", "INT", "REFERENCES users(id)")
 	b.Define("status", "SMALLINT", "NOT NULL")
 	b.Define("accrual", "REAL", "NOT NULL")
 	b.Define("created", "TIMESTAMP", "NOT NULL")
@@ -57,26 +56,26 @@ func (client *PostgresClient) initOrdersTable(ctx context.Context) error {
 
 	query, args := b.Build()
 
-	_, err := client.db.ExecContext(ctx, query, args...)
+	_, err := client.pool.Exec(ctx, query, args...)
 
-	return convertError(err)
+	return err
 }
 
 func (client *PostgresClient) initWithdrawalsTable(ctx context.Context) error {
 	b := sqlbuilder.NewCreateTableBuilder()
 
 	b.IfNotExists()
-	b.CreateTable(WithdrawalsTable)
+	b.CreateTable("withdrawals")
 	b.Define("id", "SERIAL", "PRIMARY KEY")
 	b.Define("order_id", "TEXT", "NOT NULL", "UNIQUE")
 	b.Define("sum", "REAL", "NOT NULL")
-	b.Define("user_id", "INT", fmt.Sprintf("REFERENCES %s(id)", UsersTable))
+	b.Define("user_id", "INT", "REFERENCES users(id)")
 	b.Define("created", "TIMESTAMP", "NOT NULL")
 	b.Define("updated", "TIMESTAMP", "NOT NULL")
 
 	query, args := b.Build()
 
-	_, err := client.db.ExecContext(ctx, query, args...)
+	_, err := client.pool.Exec(ctx, query, args...)
 
-	return convertError(err)
+	return err
 }

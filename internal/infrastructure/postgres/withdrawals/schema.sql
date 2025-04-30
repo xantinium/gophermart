@@ -1,0 +1,8 @@
+CREATE TABLE withdrawals (
+	id SERIAL PRIMARY KEY,
+	order_id TEXT NOT NULL UNIQUE,
+	sum REAL NOT NULL,
+	user_id INT NOT NULL,
+	created TIMESTAMP NOT NULL,
+	updated TIMESTAMP NOT NULL
+);

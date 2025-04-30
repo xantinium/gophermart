@@ -17,6 +17,6 @@ func (h) Parse(ctx *gin.Context) (request, error) {
 }
 
 type response struct {
-	Current   float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
+	Current   float32 `json:"current"`
+	Withdrawn float32 `json:"withdrawn"`
 }

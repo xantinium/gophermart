@@ -2,50 +2,35 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
-	"errors"
-	"time"
 
-	"github.com/huandu/go-sqlbuilder"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/xantinium/gophermart/internal/models"
+	"github.com/xantinium/gophermart/internal/infrastructure/postgres/orders"
+	"github.com/xantinium/gophermart/internal/infrastructure/postgres/users"
+	"github.com/xantinium/gophermart/internal/infrastructure/postgres/withdrawals"
 )
 
-func init() {
-	sqlbuilder.DefaultFlavor = sqlbuilder.PostgreSQL
-}
-
-// PostgresClientOptions опции для PostgreSQL клиента.
-type PostgresClientOptions struct {
-	PoolSize        int
-	ConnMaxIdleTime time.Duration
-	ConnMaxLifeTime time.Duration
-}
-
-// DefaultOptions опции по умолчанию для PostgreSQL клиента.
-var DefaultOptions = PostgresClientOptions{
-	PoolSize:        5,
-	ConnMaxIdleTime: time.Second * 60,
-	ConnMaxLifeTime: time.Minute * 5,
-}
-
 // NewPostgresClient создаёт новый клиент для работы с PostgreSQL.
-func NewPostgresClient(ctx context.Context, connStr string, opts PostgresClientOptions) (*PostgresClient, error) {
-	db, err := sql.Open("pgx", connStr)
+func NewPostgresClient(ctx context.Context, connStr string) (*PostgresClient, error) {
+	pool, err := pgxpool.New(ctx, connStr)
 	if err != nil {
 		return nil, err
 	}
 
 	client := &PostgresClient{
-		db: db,
+		pool:             pool,
+		UsersTable:       users.NewUsersTable(pool),
+		OrdersTable:      orders.NewOrdersTable(pool),
+		WithdrawalsTable: withdrawals.NewWithdrawalsTable(pool),
 	}
 
+	// sqlc не генерирует код для создания таблиц.
+	// Скорее всего, предполагается, что это не входит
+	// в зону ответственности приложения.
 	err = client.initTables(ctx)
 	if err != nil {
-		db.Close()
+		pool.Close()
+
 		return nil, err
 	}
 
@@ -54,26 +39,14 @@ func NewPostgresClient(ctx context.Context, connStr string, opts PostgresClientO
 
 // PostgresClient клиент для работы с PostgreSQL.
 type PostgresClient struct {
-	db *sql.DB
+	pool *pgxpool.Pool
+
+	*users.UsersTable
+	*orders.OrdersTable
+	*withdrawals.WithdrawalsTable
 }
 
 // Destroy уничтожает клиент, закрывая все соединения.
-func (client *PostgresClient) Destroy() error {
-	return client.db.Close()
-}
-
-func convertError(err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
-		return models.ErrNotFound
-	}
-
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case pgerrcode.UniqueViolation:
-			return models.ErrAlreadyExists
-		}
-	}
-
-	return err
+func (client *PostgresClient) Destroy() {
+	client.pool.Close()
 }

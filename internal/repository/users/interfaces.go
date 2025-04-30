@@ -7,6 +7,6 @@ import (
 )
 
 type UsersStorage interface {
-	InsertUser(ctx context.Context, login, passwordHash string) error
-	FindUserByLogin(ctx context.Context, login string) (models.User, error)
+	CreateUser(ctx context.Context, login, passwordHash string) error
+	GetUserByLogin(ctx context.Context, login string) (models.User, error)
 }

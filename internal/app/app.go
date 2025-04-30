@@ -22,7 +22,7 @@ type Options struct {
 }
 
 func New(opts Options) *App {
-	psqlClient, err := postgres.NewPostgresClient(context.Background(), opts.DatabaseConnStr, postgres.DefaultOptions)
+	psqlClient, err := postgres.NewPostgresClient(context.Background(), opts.DatabaseConnStr)
 	if err != nil {
 		panic(err)
 	}
