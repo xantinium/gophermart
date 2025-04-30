@@ -14,6 +14,10 @@ import (
 	"github.com/xantinium/gophermart/internal/usecases"
 )
 
+const (
+	defaultRequestLimit = 10
+)
+
 type WorkerPoolOptions struct {
 	PoolSize    int
 	AccrualHost string
@@ -26,7 +30,7 @@ func NewWorkerPool(opts WorkerPoolOptions) *WorkerPool {
 		accrualHost:      opts.AccrualHost,
 		useCases:         opts.UseCases,
 		reader:           newOrdersReader(opts.UseCases, opts.PoolSize),
-		requestLimiter:   tools.NewSemaphore(10),
+		requestLimiter:   tools.NewSemaphore(defaultRequestLimit),
 		processingOrders: &ordersSet{set: map[string]struct{}{}},
 	}
 }
@@ -47,94 +51,104 @@ func (w *WorkerPool) Run(ctx context.Context) {
 	w.wg.Add(1)
 	go func() {
 		defer w.wg.Done()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				orders, err := w.reader.ReadOrders(ctx)
-				if err != nil {
-					logger.Errorf("failed to read orders: %v", err)
-					time.Sleep(time.Millisecond * 100)
-					continue
-				}
-
-				if len(orders) == 0 {
-					time.Sleep(time.Millisecond * 100)
-					continue
-				}
-
-				for _, order := range orders {
-					if w.processingOrders.Has(order.Number()) {
-						time.Sleep(time.Millisecond * 100)
-						continue
-					}
-
-					w.processingOrders.Add(order.Number())
-					ordersChan <- order
-				}
-			}
-		}
+		w.runReader(ctx, ordersChan)
 	}()
 
+	w.wg.Add(w.poolSize)
 	for range w.poolSize {
-		w.wg.Add(1)
 		go func() {
 			defer w.wg.Done()
-
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case order, ok := <-ordersChan:
-					if !ok {
-						return
-					}
-
-					var (
-						err  error
-						info orderInfo
-					)
-
-					tools.DefaulRetrier.Exec(func() bool {
-						info, err = w.requestOrdedInfo(ctx, order.Number())
-						return err != nil
-					})
-
-					// TODO: возможно тут стоит устанавливать статус Invalid.
-					if err != nil {
-						logger.Errorf("failed to request order %q info: %v", order.Number(), err)
-						w.processingOrders.Remove(order.Number())
-						continue
-					}
-
-					if info.Status == order.Status() {
-						logger.Infof("order has no changes")
-						w.processingOrders.Remove(order.Number())
-						continue
-					}
-
-					switch info.Status {
-					case models.OrderStatusProcessing:
-						err = w.useCases.MarkOrderAsProcessing(ctx, order.Number())
-					case models.OrderStatusInvalid:
-						err = w.useCases.MarkOrderAsInvalid(ctx, order.Number())
-					case models.OrderStatusProcessed:
-						err = w.useCases.MarkOrderAsProcessed(ctx, order.Number(), info.Accrual)
-					default:
-						logger.Infof("order %s still in processing", order.Number())
-					}
-
-					w.processingOrders.Remove(order.Number())
-
-					if err != nil {
-						logger.Infof("failed to process order %q", order.Number())
-					}
-				}
-			}
+			w.runWorker(ctx, ordersChan)
 		}()
 	}
+}
+
+func (w *WorkerPool) runReader(ctx context.Context, ordersChan chan<- models.Order) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			orders, err := w.reader.ReadOrders(ctx)
+			if err != nil {
+				logger.Errorf("failed to read orders: %v", err)
+				w.throttle()
+				continue
+			}
+
+			if len(orders) == 0 {
+				w.throttle()
+				continue
+			}
+
+			for _, order := range orders {
+				if w.processingOrders.Has(order.Number()) {
+					w.throttle()
+					continue
+				}
+
+				w.processingOrders.Add(order.Number())
+				ordersChan <- order
+			}
+		}
+	}
+}
+
+func (w *WorkerPool) runWorker(ctx context.Context, ordersChan <-chan models.Order) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case order, ok := <-ordersChan:
+			if !ok {
+				return
+			}
+
+			var (
+				err  error
+				info orderInfo
+			)
+
+			tools.DefaulRetrier.Exec(func() bool {
+				info, err = w.requestOrdedInfo(ctx, order.Number())
+				return err != nil
+			})
+
+			// TODO: возможно тут стоит устанавливать статус Invalid.
+			if err != nil {
+				logger.Errorf("failed to request order %q info: %v", order.Number(), err)
+				w.processingOrders.Remove(order.Number())
+				continue
+			}
+
+			if info.Status == order.Status() {
+				logger.Infof("order has no changes")
+				w.processingOrders.Remove(order.Number())
+				continue
+			}
+
+			switch info.Status {
+			case models.OrderStatusProcessing:
+				err = w.useCases.MarkOrderAsProcessing(ctx, order.Number())
+			case models.OrderStatusInvalid:
+				err = w.useCases.MarkOrderAsInvalid(ctx, order.Number())
+			case models.OrderStatusProcessed:
+				err = w.useCases.MarkOrderAsProcessed(ctx, order.Number(), info.Accrual)
+			default:
+				logger.Infof("order %s still in processing", order.Number())
+			}
+
+			w.processingOrders.Remove(order.Number())
+
+			if err != nil {
+				logger.Infof("failed to process order %q", order.Number())
+			}
+		}
+	}
+}
+
+func (w *WorkerPool) throttle() {
+	time.Sleep(time.Millisecond * 100)
 }
 
 func (w *WorkerPool) Wait() {

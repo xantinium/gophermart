@@ -31,18 +31,41 @@ func parseAppArgs() appArgs {
 		AccrualHost:     *accrualHost,
 	}
 
+	return overrideAppArgsWithEnv(args)
+}
+
+func overrideAppArgsWithEnv(args appArgs) appArgs {
 	envArgs := parseAppArgsFromEnv()
 
 	if envArgs.IsDev.Exists {
+		if envArgs.IsDev.Error != nil {
+			panic(envArgs.IsDev.Error)
+		}
+
 		args.IsDev = envArgs.IsDev.Value
 	}
+
 	if envArgs.Addr.Exists {
+		if envArgs.Addr.Error != nil {
+			panic(envArgs.Addr.Error)
+		}
+
 		args.Addr = envArgs.Addr.Value
 	}
+
 	if envArgs.DatabaseConnStr.Exists {
+		if envArgs.DatabaseConnStr.Error != nil {
+			panic(envArgs.DatabaseConnStr.Error)
+		}
+
 		args.DatabaseConnStr = envArgs.DatabaseConnStr.Value
 	}
+
 	if envArgs.AccrualHost.Exists {
+		if envArgs.AccrualHost.Error != nil {
+			panic(envArgs.AccrualHost.Error)
+		}
+
 		args.AccrualHost = envArgs.AccrualHost.Value
 	}
 
