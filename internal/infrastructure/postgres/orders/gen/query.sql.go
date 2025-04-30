@@ -72,7 +72,7 @@ func (q *Queries) GetOrderByNumber(ctx context.Context, number string) (Order, e
 
 const getOrdersByLimitAndOffset = `-- name: GetOrdersByLimitAndOffset :many
 SELECT id, number, user_id, status, accrual, created, updated FROM orders
-WHERE status IN ($3)
+WHERE status = ANY ($3)
 ORDER BY id ASC
 LIMIT $1
 OFFSET $2

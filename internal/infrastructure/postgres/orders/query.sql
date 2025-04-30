@@ -25,7 +25,7 @@ WHERE user_id = $1;
 
 -- name: GetOrdersByLimitAndOffset :many
 SELECT * FROM orders
-WHERE status IN (sqlc.slice('statuses'))
+WHERE status = ANY (sqlc.slice('statuses'))
 ORDER BY id ASC
 LIMIT $1
 OFFSET $2;
