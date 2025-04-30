@@ -47,7 +47,7 @@ func (q *Queries) CreateWithdrawal(ctx context.Context, arg CreateWithdrawalPara
 }
 
 const getTotalWithdrawnByUserID = `-- name: GetTotalWithdrawnByUserID :one
-SELECT SUM(sum)::real as total_withdrawn FROM withdrawals
+SELECT COALESCE(SUM(sum), 0)::real as total_withdrawn FROM withdrawals
 WHERE user_id = $1
 `
 

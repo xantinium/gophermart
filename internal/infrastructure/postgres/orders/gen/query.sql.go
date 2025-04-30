@@ -146,7 +146,7 @@ func (q *Queries) GetOrdersByUserID(ctx context.Context, userID int32) ([]Order,
 }
 
 const getTotalAccrualByUserID = `-- name: GetTotalAccrualByUserID :one
-SELECT SUM(accrual)::real as total_accrual FROM orders
+SELECT COALESCE(SUM(accrual), 0)::real as total_accrual FROM orders
 WHERE user_id = $1 AND status = $2
 `
 

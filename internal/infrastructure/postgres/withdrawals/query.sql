@@ -18,5 +18,5 @@ SELECT * FROM withdrawals
 WHERE user_id = $1;
 
 -- name: GetTotalWithdrawnByUserID :one
-SELECT SUM(sum)::real as total_withdrawn FROM withdrawals
+SELECT COALESCE(SUM(sum), 0)::real as total_withdrawn FROM withdrawals
 WHERE user_id = $1;

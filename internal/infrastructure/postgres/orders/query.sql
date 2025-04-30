@@ -36,5 +36,5 @@ SET status = $1, accrual = $2, updated = $3
 WHERE number = $4;
 
 -- name: GetTotalAccrualByUserID :one
-SELECT SUM(accrual)::real as total_accrual FROM orders
+SELECT COALESCE(SUM(accrual), 0)::real as total_accrual FROM orders
 WHERE user_id = $1 AND status = $2;
