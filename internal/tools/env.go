@@ -22,17 +22,12 @@ type IntEnvVar struct {
 
 // GetIntFromEnv достаёт переменную окружения типа int.
 func GetIntFromEnv(name string) IntEnvVar {
-	var (
-		exists bool
-		v      IntEnvVar
-	)
+	var v IntEnvVar
 
-	v.RawValue, exists = os.LookupEnv(name)
-	if !exists {
+	v.RawValue, v.Exists = os.LookupEnv(name)
+	if !v.Exists {
 		return v
 	}
-
-	v.Exists = true
 
 	v.Value, v.Error = strconv.Atoi(v.RawValue)
 
@@ -49,13 +44,10 @@ type StrEnvVar struct {
 
 // GetStrFromEnv достаёт переменную окружения типа string.
 func GetStrFromEnv(name string) StrEnvVar {
-	var (
-		exists bool
-		v      StrEnvVar
-	)
+	var v StrEnvVar
 
-	v.RawValue, exists = os.LookupEnv(name)
-	if !exists {
+	v.RawValue, v.Exists = os.LookupEnv(name)
+	if !v.Exists {
 		return v
 	}
 
@@ -74,17 +66,12 @@ type BoolEnvVar struct {
 
 // GetBoolFromEnv достаёт переменную окружения типа bool.
 func GetBoolFromEnv(name string) BoolEnvVar {
-	var (
-		exists bool
-		v      BoolEnvVar
-	)
+	var v BoolEnvVar
 
-	v.RawValue, exists = os.LookupEnv(name)
-	if !exists {
+	v.RawValue, v.Exists = os.LookupEnv(name)
+	if !v.Exists {
 		return v
 	}
-
-	v.Exists = true
 
 	switch strings.TrimSpace(strings.ToLower(v.RawValue)) {
 	case "true":
