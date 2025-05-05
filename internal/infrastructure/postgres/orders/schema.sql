@@ -1,0 +1,9 @@
+CREATE TABLE orders (
+	id SERIAL PRIMARY KEY,
+	number TEXT NOT NULL UNIQUE,
+	user_id INT NOT NULL,
+	status SMALLINT NOT NULL,
+	accrual REAL NOT NULL,
+	created TIMESTAMP NOT NULL,
+	updated TIMESTAMP NOT NULL
+);
